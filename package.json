@@ -1,0 +1,11 @@
+{
+    "name": "it.pinf.org.browserify",
+    "version": "0.0.0",
+    "dependencies": {
+        "bash.origin.test": "^0.1.31",
+        "bash.origin": "^0.1.60"
+    },
+    "scripts": {
+        "test": "BO_ROOT_SCRIPT_PATH=$(pwd)/node_modules/bash.origin/bash.origin bash.origin.test examples"
+    }
+}
