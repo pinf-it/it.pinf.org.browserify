@@ -21,7 +21,11 @@ CALL_process run "bash.origin.express~01-HelloWorld" {
                 "routes": {
                     "/code.js": {
                         "@it.pinf.org.browserify#s1": {
-                            "src": "$__DIRNAME__/code.js"
+                            "code": function /* CodeBlock */ (options) {
+
+                                window.hello = "world";
+
+                            }
                         }
                     }
                 }
