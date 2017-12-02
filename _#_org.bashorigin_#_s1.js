@@ -147,6 +147,11 @@ function do_process (options, callback) {
             }
 
             browserify.transform(LIB.resolve("babelify"), {
+                sourceMaps: false,
+                compact: false,
+                ignore: [
+                    "explicit-unsafe-eval.js"
+                ],
                 presets: [
                     LIB.resolve("babel-preset-es2015")
                 ]
