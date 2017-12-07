@@ -88,7 +88,9 @@ function do_process (options, callback) {
             if (typeof CONFIG.basedir !== "undefined") {
                 opts.basedir = CONFIG.basedir;
             }
-            opts.paths = [];
+            opts.paths = [
+                require("bash.origin.workspace").node_modules
+            ];
             var remaining = opts.basedir;
             while (true) {
                 opts.paths.push(PATH.join(remaining, "node_modules"));
