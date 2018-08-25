@@ -107,23 +107,44 @@ function do_process (options, callback) {
                     throw new Error("TODO: Implement 'expose' for PINF bundle format");
                 }
             } else
+            if (CONFIG.format === "node") {
+                opts.node = true;
+                opts.standalone = "main-module";
+            } else
             if (CONFIG.format === "standalone") {
-                // TODO: Deprecate in favour of 'CONFIG.expose.window'?
+                console.error("DEPRECATED: 'format = \"standalone\"' should no longer be used. Use 'expose.window' or 'expose.exports' instead.");
                 opts.standalone = "main-module";
             }
-            if (
-                CONFIG.expose &&
-                CONFIG.expose.window
-            ) {
-                // NOTE: We do not use the browserify standalone feature out of the box
-                //       as we want to support exposing multiple exports as well as expose
-                //       named exports instead of just `module.exports` of the entry module.
-                opts.standalone = "main-module";
-                if (
-                    CONFIG.expose.window.indexOf(",") !== -1 ||
-                    Array.isArray(CONFIG.expose.window)
-                ) {
-                    throw new Error("TODO: Implement exposure of multiple exports");
+
+            if (CONFIG.expose) {
+                if (opts.node) {
+                    throw new Error("'format=node' and 'expose' are mutually exclusive");
+                }
+                if (Object.keys(CONFIG.expose).length > 1) {
+                    throw new Error("More than once 'expose' key!");
+                }
+                if (CONFIG.expose.window) {
+                    // NOTE: We do not use the browserify standalone feature out of the box
+                    //       as we want to support exposing multiple exports as well as expose
+                    //       named exports instead of just `module.exports` of the entry module.
+                    if (opts.standalone && opts.standalone !== "main-module") {
+                        console.error("WARNING: Setting 'standalone = \"main-module\"' due to 'expose.window' (previous value '" + opts.standalone + "').");
+                    }
+                    opts.standalone = "main-module";
+                    if (
+                        CONFIG.expose.window.indexOf(",") !== -1 ||
+                        Array.isArray(CONFIG.expose.window)
+                    ) {
+                        throw new Error("TODO: Implement exposure of multiple exports");
+                    }
+                } else
+                if (CONFIG.expose.exports) {
+                    if (opts.standalone && opts.standalone !== "main-module") {
+                        console.error("WARNING: Setting 'standalone = \"main-module\"' due to 'expose.exports' (previous value '" + opts.standalone + "').");
+                    }
+                    opts.standalone = "main-module";
+                } else {
+                    throw new Error("'CONFIG.expose' contains unknown key!");
                 }
             }
 
@@ -178,29 +199,83 @@ function do_process (options, callback) {
                 if (CONFIG.format === "pinf") {
                     // Make the bundle consumable by pinf.js.org
                     bundle = [
+                        // TODO: Move this wrapper into a browserify plugin.
                         'PINF.bundle("", function(require) {',
-                        '	require.memoize("/main.js", function (require, exports, module) {',
-                        '       var pmodule = module;',
+                        '	require.memoize("/main.js", function (_require, _exports, _module) {',
+                                'var bundle = { require: _require, exports: _exports, module: _module };',
+                                'var exports = undefined;',
+                                'var module = undefined;',
+                                'var define = function (deps, init) {',
+                                    // TODO: Only export what is in 'CONFIG.expose.exports'.
+                                    '_module.exports = init();',
+                                '}; define.amd = true;',
+
+                                // DEPRECATED: 'pmodule' should no longer be used. Use 'bundle.module' instead.
+                                '       var pmodule = bundle.module;',
+
                                 bundle,
                         '	});',
                         '});'
                     ].join("\n");
                 } else
+                if (CONFIG.format === "node") {
+
+                    // Nothing to do.
+                    // TODO: Only export what is in 'CONFIG.expose.exports'.
+
+                } else
                 if (
                     opts.standalone === "main-module" &&
-                    CONFIG.expose &&
-                    CONFIG.expose.window
+                    CONFIG.expose
                 ) {
                     // Now that we have the main module exports we expose the requested properties.
+
+                    if (CONFIG.expose.window) {
+                        bundle = [
+                            // TODO: Move this wrapper into a browserify plugin.
+                            '((function (_require, _exports, _module) {',
+                                'var bundle = { require: _require, exports: _exports, module: _module };',
+                                'var exports = undefined;',
+                                'var module = undefined;',
+                                'var define = function (deps, init) {',
+                                    'var exports = init();',
+                                    '[' + JSON.stringify(CONFIG.expose.window) + '].forEach(function (name) {',
+                                        'window[name] = exports[name];',
+                                    '});',
+                                '}; define.amd = true;',
+                                bundle,
+                            '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
+                        ].join("\n");
+                    } else
+                    if (CONFIG.expose.exports) {
+                        bundle = [
+                            // TODO: Move this wrapper into a browserify plugin.
+                            '((function (_require, _exports, _module) {',
+                                'var bundle = { require: _require, exports: _exports, module: _module };',
+                                'if (typeof bundle.exports !== "object") throw new Error("The \'exports\' variable must be set!");',
+                                'var exports = undefined;',
+                                'var module = undefined;',
+                                'var define = function (deps, init) {',
+                                    'var exports = init();',
+                                    '[' + JSON.stringify(CONFIG.expose.exports) + '].forEach(function (name) {',
+                                        'bundle.exports[name] = exports[name];',
+                                    '});',
+                                '}; define.amd = true;',
+                                bundle,
+                            '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
+                        ].join("\n");
+                    }
+                } else {
                     bundle = [
-                        '((function () {',
+                        // TODO: Move this wrapper into a browserify plugin.
+                        '((function (require, exports, module) {',
+                            'var bundle = { require: require, exports: exports, module: module };',
+
+                            // DEPRECATED: 'sandbox' being set to 'exports'. Use 'bundle.exports' instead.
+                            'if (typeof exports !== "undefined") var sandbox = bundle.exports;',
+
                             bundle,
-                            'var mainModule = window.mainModule;',
-                            'delete window.mainModule;',
-                            '[' + JSON.stringify(CONFIG.expose.window) + '].forEach(function (name) {',
-                                'window[name] = mainModule[name];',
-                            '});',
-                        '})())'
+                        '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
                     ].join("\n");
                 }
 
@@ -208,11 +283,13 @@ function do_process (options, callback) {
                 Object.keys(options.variables).forEach(function (name) {
                     if (typeof options.variables[name] === "object") {
                         bundle = bundle.replace(
+                            // TODO: Make delimiter configurable.
                             new RegExp("\"%%%" + name + "%%%\"", "g"),
                             '"' + JSON.stringify(options.variables[name]).replace(/"/g, '\\"') + '"'
                         );
                     }
                     bundle = bundle.replace(
+                        // TODO: Make delimiter configurable.
                         new RegExp("%%%" + name + "%%%", "g"),
                         options.variables[name]
                     );
@@ -293,5 +370,24 @@ exports.forConfig = function (CONFIG) {
             return middleware;
         },
         "#io.pinf/process~s1": process
+    }
+}
+
+
+if (require.main === module) {
+
+    var config = JSON.parse(process.argv[2]);
+    var api = exports.forConfig(config);
+
+    if (!config.prime) {
+        api['#io.pinf/process~s1']({
+            variables: config.variables || {}
+        }, function (err, code) {            
+            if (err) {
+                console.error(err);
+                process.exit(1);
+            }
+            process.exit(0);
+        });
     }
 }

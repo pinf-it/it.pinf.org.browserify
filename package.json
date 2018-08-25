@@ -16,5 +16,8 @@
     },
     "scripts": {
         "test": "bash.origin.test examples"
+    },
+    "devDependencies": {
+        "pinf-loader-js": "^0.4.22"
     }
 }

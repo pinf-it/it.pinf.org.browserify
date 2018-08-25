@@ -1,0 +1,14 @@
+>>>TEST_IGNORE_LINE:\d milliseconds.$<<<
+>>>TEST_IGNORE_LINE:\d+\spassing\s\([^\)]+\)<<<
+environments: default
+>>>TEST_IGNORE_LINE:^[\d\.]+\s<<<
+
+
+  Suite
+[bash.origin.express] Adding route: /dist/script.browser.js
+[bash.origin.express] Adding route: /
+Server: http://localhost:8080/
+[READY]
+
+
+

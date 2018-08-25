@@ -4,7 +4,7 @@ depend {
     "process": "@com.github/bash-origin/bash.origin.process#s1"
 }
 
-CALL_process run "bash.origin.express~01-HelloWorld" {
+CALL_process run "bash.origin.express~06-Express-File" {
     "server": {
         "env": {
             # TODO: Use dynamic port
@@ -21,11 +21,7 @@ CALL_process run "bash.origin.express~01-HelloWorld" {
                 "routes": {
                     "/code.js": {
                         "@it.pinf.org.browserify#s1": {
-                            "code": function /* CodeBlock */ (options) {
-
-                                window.hello = "world";
-
-                            }
+                            "src": "$__DIRNAME__/code.js"
                         }
                     }
                 }
