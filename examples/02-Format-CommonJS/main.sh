@@ -9,6 +9,16 @@ CALL_bundler run {
     "dist": "$__DIRNAME__/dist/script.cjs.js",
     "expose": {
         "exports": "script_global"
+    },
+    "files": {
+        "resources": "$__DIRNAME__/../01-Format-Browser/resources"
+    },
+    "inject": {
+        "dataLoader": (javascript () >>>
+            function (url, done) {
+                done(JSON.parse(require("fs").readFileSync(require("path").join(__dirname, url), "utf8")));
+            }
+        <<<)
     }
 }
 
@@ -20,7 +30,10 @@ node --eval '
 
     ASSERT.deepEqual(script, {
         script_global: {
-            foo: "bar"
+            foo: "bar",
+            "data": {
+                "bar": "baz"
+            }
         }
     });
 '

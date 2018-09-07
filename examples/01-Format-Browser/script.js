@@ -1,5 +1,4 @@
 
-
 exports.script_global = {
     foo: "bar"
 };
@@ -9,3 +8,7 @@ exports.script_global_not_exported = {
     not: "exported"
 };
 
+dataLoader("./resources/data.json", function (data) {
+    exports.script_global.data = data;
+    exports.script_global_not_exported.data = data;
+});

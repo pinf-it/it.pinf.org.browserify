@@ -21,7 +21,24 @@ function do_process (options, callback) {
         if (!CONFIG.dist) {
             return callback(null);
         }
-        return FS.outputFile(CONFIG.dist, code, "utf8", callback);
+        return FS.outputFile(CONFIG.dist, code, "utf8", function (err) {
+            if (err) return callback(err);
+
+            if (!CONFIG.files) {
+                return callback(null);
+            }
+
+            // Copy files
+            Object.keys(CONFIG.files).forEach(function (filepath) {
+
+                var sourceBasePath = CONFIG.files[filepath];
+                var targetBasePath = PATH.join(CONFIG.dist, "..", filepath);
+
+                FS.copySync(sourceBasePath, targetBasePath);
+            });
+
+            return callback(null);
+        });
     }
 
     if (CONFIG.code && !CONFIG.src) {
@@ -132,7 +149,10 @@ function do_process (options, callback) {
                     }
                     opts.standalone = "main-module";
                     if (
-                        CONFIG.expose.window.indexOf(",") !== -1 ||
+                        (
+                            typeof CONFIG.expose.window === "string" &&
+                            CONFIG.expose.window.indexOf(",") !== -1
+                        ) ||
                         Array.isArray(CONFIG.expose.window)
                     ) {
                         throw new Error("TODO: Implement exposure of multiple exports");
@@ -173,6 +193,7 @@ function do_process (options, callback) {
                 sourceMaps: false,
                 compact: false,
                 ignore: [
+                    // TODO: Make this configurable
                     "explicit-unsafe-eval.js"
                 ],
                 presets: [
@@ -196,12 +217,31 @@ function do_process (options, callback) {
 
                 bundle = bundle.toString();
 
+                var injectionCode = [];
+                if (CONFIG.inject) {
+                    Object.keys(CONFIG.inject).forEach(function (name) {
+
+                        var val = CONFIG.inject[name];
+                        if (
+                            typeof val === "object" &&
+                            val['.@'] === 'github.com~0ink~codeblock/codeblock:Codeblock'
+                        ) {
+                            val = CODEBLOCK.thawFromJSON(val).getCode();
+                        } else {
+                            val = val.toString();
+                        }
+
+                        injectionCode.push("var " + name + " = " + val + ";");
+                    });
+                }
+                injectionCode = injectionCode.join("\n");
+
                 if (CONFIG.format === "pinf") {
                     // Make the bundle consumable by pinf.js.org
                     bundle = [
                         // TODO: Move this wrapper into a browserify plugin.
-                        'PINF.bundle("", function(require) {',
-                        '	require.memoize("/main.js", function (_require, _exports, _module) {',
+                        'PINF.bundle("", function(__require) {',
+                        '	__require.memoize("/main.js", function (_require, _exports, _module) {',
                                 'var bundle = { require: _require, exports: _exports, module: _module };',
                                 'var exports = undefined;',
                                 'var module = undefined;',
@@ -213,6 +253,7 @@ function do_process (options, callback) {
                                 // DEPRECATED: 'pmodule' should no longer be used. Use 'bundle.module' instead.
                                 '       var pmodule = bundle.module;',
 
+                                injectionCode,
                                 bundle,
                         '	});',
                         '});'
@@ -220,8 +261,11 @@ function do_process (options, callback) {
                 } else
                 if (CONFIG.format === "node") {
 
-                    // Nothing to do.
                     // TODO: Only export what is in 'CONFIG.expose.exports'.
+                    bundle = [
+                        injectionCode,
+                        bundle,
+                    ].join("\n");
 
                 } else
                 if (
@@ -230,7 +274,21 @@ function do_process (options, callback) {
                 ) {
                     // Now that we have the main module exports we expose the requested properties.
 
+                    function normalizeExposed (exposed) {
+                        if (typeof exposed === 'string') {
+                            var name = exposed;
+                            exposed = {};
+                            exposed[name] = name;
+                        }
+                        return Object.keys(exposed).map(function (name) {
+                            return [name, exposed[name]];
+                        });
+                    }
+
                     if (CONFIG.expose.window) {
+
+
+
                         bundle = [
                             // TODO: Move this wrapper into a browserify plugin.
                             '((function (_require, _exports, _module) {',
@@ -239,10 +297,11 @@ function do_process (options, callback) {
                                 'var module = undefined;',
                                 'var define = function (deps, init) {',
                                     'var exports = init();',
-                                    '[' + JSON.stringify(CONFIG.expose.window) + '].forEach(function (name) {',
-                                        'window[name] = exports[name];',
+                                    JSON.stringify(normalizeExposed(CONFIG.expose.window)) + '.forEach(function (expose) {',
+                                        'window[expose[0]] = exports[expose[1]];',
                                     '});',
                                 '}; define.amd = true;',
+                                injectionCode,
                                 bundle,
                             '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
                         ].join("\n");
@@ -257,10 +316,11 @@ function do_process (options, callback) {
                                 'var module = undefined;',
                                 'var define = function (deps, init) {',
                                     'var exports = init();',
-                                    '[' + JSON.stringify(CONFIG.expose.exports) + '].forEach(function (name) {',
-                                        'bundle.exports[name] = exports[name];',
+                                    JSON.stringify(normalizeExposed(CONFIG.expose.exports)) + '.forEach(function (expose) {',
+                                        'window[expose[0]] = exports[expose[1]];',
                                     '});',
                                 '}; define.amd = true;',
+                                injectionCode,
                                 bundle,
                             '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
                         ].join("\n");
@@ -272,8 +332,9 @@ function do_process (options, callback) {
                             'var bundle = { require: require, exports: exports, module: module };',
 
                             // DEPRECATED: 'sandbox' being set to 'exports'. Use 'bundle.exports' instead.
-                            'if (typeof exports !== "undefined") var sandbox = bundle.exports;',
+                            //'if (typeof exports !== "undefined") var sandbox = bundle.exports;',
 
+                            injectionCode,
                             bundle,
                         '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
                     ].join("\n");

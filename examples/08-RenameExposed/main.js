@@ -20,14 +20,16 @@ describe("Suite", function() {
         "routes": {
             "/dist/script.browser.js": {
                 "@it.pinf.org.browserify#s1": {
-                    "src": __dirname + "/script.js",
+                    "src": __dirname + "/../01-Format-Browser/script.js",
                     "dist": __dirname + "/dist/script.browser.js",
                     "expose": {
-                        "window": "script_global"
+                        "window": {
+                            "script_global_renamed": "script_global"
+                        }
                     },
                     "prime": true,
                     "files": {
-                        "resources": __dirname + "/resources"
+                        "resources": __dirname + "/../01-Format-Browser/resources"
                     },
                     "inject": {
                         "dataLoader": function (url, done) {                            
@@ -53,12 +55,12 @@ describe("Suite", function() {
 
         client.executeAsync(function (done) {
 
-            console.log("window.script_global", window.script_global);
-            console.log("window.script_global_not_exported", window.script_global_not_exported);
+            console.log("window.script_global_renamed", window.script_global_renamed);
+            console.log("window.script_global_not_exported_renamed", window.script_global_not_exported_renamed);
 
             done([
-                window.script_global,
-                window.script_global_not_exported
+                window.script_global_renamed,
+                window.script_global_not_exported_renamed
             ]);
         }, [], function (result) {
 

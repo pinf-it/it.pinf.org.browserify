@@ -6,7 +6,17 @@ depend {
 
 CALL_bundler run {
     "src": "$__DIRNAME__/../01-Format-Browser/script.js",
-    "dist": "$__DIRNAME__/dist/script.js"
+    "dist": "$__DIRNAME__/dist/script.js",
+    "files": {
+        "resources": "$__DIRNAME__/../01-Format-Browser/resources"
+    },
+    "inject": {
+        "dataLoader": (javascript () >>>
+            function (url, done) {
+                done(JSON.parse(require("fs").readFileSync(require("path").join("./dist", url), "utf8")));
+            }
+        <<<)
+    }
 }
 
 node --eval '

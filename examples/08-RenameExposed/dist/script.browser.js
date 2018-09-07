@@ -1,31 +1,18 @@
-{
-    "script_global": {
-        "foo": "bar",
-        "data": {
-            "bar": "baz"
-        }
-    },
-    "script_global_not_exported": {
-        "foo": "bar",
-        "not": "exported",
-        "data": {
-            "bar": "baz"
-        }
-    }
-}
----
-PINF.bundle("", function(__require) {
-	__require.memoize("/main.js", function (_require, _exports, _module) {
+((function (_require, _exports, _module) {
 var bundle = { require: _require, exports: _exports, module: _module };
 var exports = undefined;
 var module = undefined;
 var define = function (deps, init) {
-_module.exports = init();
+var exports = init();
+[["script_global_renamed","script_global"]].forEach(function (expose) {
+window[expose[0]] = exports[expose[1]];
+});
 }; define.amd = true;
-       var pmodule = bundle.module;
-var dataLoader = function (url, done) {
-    done(JSON.parse(require("fs").readFileSync(require("path").join("./dist", url), "utf8")));
-};
+var dataLoader = function (url, done) {                            
+                            fetch(url).then(function(response) {
+                                return response.json();
+                            }).then(done);
+                        };
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.mainModule = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 
@@ -44,5 +31,4 @@ dataLoader("./resources/data.json", function (data) {
 });
 },{}]},{},[1])(1)
 });
-	});
-});
+})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))
