@@ -5,20 +5,20 @@
         "publish": "npm"
     },
     "dependencies": {
-        "async": "^2.5.0",
-        "babel-core": "^6.26.0",
+        "async": "^2.6.1",
+        "babel-core": "^6.26.3",
         "babel-preset-es2015": "^6.24.1",
-        "babelify": "^8.0.0",
+        "babelify": "^10.0.0",
         "bash.origin.lib": "^0.2.15",
-        "browserify": "^14.5.0",
-        "browserify-css": "^0.13.1",
+        "browserify": "^16.2.3",
+        "browserify-css": "^0.14.0",
         "through2": "^2.0.3"
     },
     "scripts": {
         "test": "bash.origin.test examples"
     },
     "devDependencies": {
-        "pinf-loader-js": "^0.4.22"
+        "pinf-loader-js": "^1.0.1"
     },
     "config": {
         "bash.origin.lib": {
