@@ -1,6 +1,6 @@
 {
     "name": "it.pinf.org.browserify",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "pm": {
         "publish": "npm"
     },
