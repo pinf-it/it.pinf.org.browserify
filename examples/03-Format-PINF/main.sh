@@ -25,8 +25,11 @@ node --eval '
     const FS = require("fs");
     const ASSERT = require("assert");
 
-    PINF.sandbox("", {
+    const pinfInstance = PINF.Loader();
+
+    pinfInstance.sandbox("", {
         load: function (uri, loadedCallback) {
+            const PINF = pinfInstance;
             var code = FS.readFileSync("./dist/script.pinf.js", "utf8");
             eval(code);
             loadedCallback();

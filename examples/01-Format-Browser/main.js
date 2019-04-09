@@ -16,7 +16,7 @@ console.log(">>>TEST_IGNORE_LINE:^[\\d\\.]+\\s<<<");
 
 describe("Suite", function() {
 
-    require('bash.origin.workspace').LIB.BASH_ORIGIN_EXPRESS.runForTestHooks(before, after, {
+    require('bash.origin.lib').js.BASH_ORIGIN_EXPRESS.runForTestHooks(before, after, {
         "routes": {
             "/dist/script.browser.js": {
                 "@it.pinf.org.browserify#s1": {

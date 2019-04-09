@@ -1,13 +1,13 @@
 
 
-const LIB = require("bash.origin.lib").forPackage(__dirname).LIB;
+const LIB = require("bash.origin.lib").forPackage(__dirname).js;
 
 
-const PATH = LIB.PATH;
+const PATH = LIB.path;
 const FS = LIB.FS_EXTRA;
 const BROWSERIFY = LIB.BROWSERIFY;
 const ASYNC = LIB.ASYNC;
-const CRYPTO = LIB.CRYPTO;
+const CRYPTO = LIB.crypto;
 const CODEBLOCK = LIB.CODEBLOCK;
 
 
@@ -105,9 +105,8 @@ function do_process (options, callback) {
             if (typeof CONFIG.basedir !== "undefined") {
                 opts.basedir = CONFIG.basedir;
             }
-            opts.paths = [
-                require("bash.origin.workspace").node_modules
-            ];
+            opts.paths = require("bash.origin.lib").forPackage(opts.basedir).NODE_PATH;
+
             var remaining = opts.basedir;
             while (true) {
                 opts.paths.push(PATH.join(remaining, "node_modules"));
@@ -190,14 +189,12 @@ function do_process (options, callback) {
             }
 
             browserify.transform(LIB.resolve("babelify"), {
+                configFile: require.resolve("./babel.config"),
                 sourceMaps: false,
                 compact: false,
                 ignore: [
                     // TODO: Make this configurable
                     "explicit-unsafe-eval.js"
-                ],
-                presets: [
-                    LIB.resolve("babel-preset-es2015")
                 ]
             });
 
@@ -216,6 +213,10 @@ function do_process (options, callback) {
                 }
 
                 bundle = bundle.toString();
+
+                if (CONFIG.strictMode === false) {
+                    bundle = bundle.replace(/(function\(require,module,exports\)\{)\n"use strict";/g, '$1');
+                }
 
                 var injectionCode = [];
                 if (CONFIG.inject) {
@@ -286,9 +287,6 @@ function do_process (options, callback) {
                     }
 
                     if (CONFIG.expose.window) {
-
-
-
                         bundle = [
                             // TODO: Move this wrapper into a browserify plugin.
                             '((function (_require, _exports, _module) {',
@@ -298,12 +296,16 @@ function do_process (options, callback) {
                                 'var define = function (deps, init) {',
                                     'var exports = init();',
                                     JSON.stringify(normalizeExposed(CONFIG.expose.window)) + '.forEach(function (expose) {',
-                                        'window[expose[0]] = exports[expose[1]];',
+                                        'if (typeof window !== "undefined") {',
+                                            'window[expose[0]] = exports[expose[1]];',
+                                        '} else if (typeof self !== "undefined") {',
+                                            'self[expose[0]] = exports[expose[1]];',
+                                        '}',
                                     '});',
                                 '}; define.amd = true;',
                                 injectionCode,
                                 bundle,
-                            '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
+                            '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined))'
                         ].join("\n");
                     } else
                     if (CONFIG.expose.exports) {
@@ -317,12 +319,12 @@ function do_process (options, callback) {
                                 'var define = function (deps, init) {',
                                     'var exports = init();',
                                     JSON.stringify(normalizeExposed(CONFIG.expose.exports)) + '.forEach(function (expose) {',
-                                        'window[expose[0]] = exports[expose[1]];',
+                                        'bundle.exports[expose[0]] = exports[expose[1]];',
                                     '});',
                                 '}; define.amd = true;',
                                 injectionCode,
                                 bundle,
-                            '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
+                            '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined))'
                         ].join("\n");
                     }
                 } else {
@@ -336,7 +338,7 @@ function do_process (options, callback) {
 
                             injectionCode,
                             bundle,
-                        '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined, ))'
+                        '})((typeof require !== "undefined" && require) || undefined, (typeof exports !== "undefined" && exports) || undefined, (typeof module !== "undefined" && module) || undefined))'
                     ].join("\n");
                 }
 

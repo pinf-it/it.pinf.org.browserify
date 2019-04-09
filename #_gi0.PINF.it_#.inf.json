@@ -1,0 +1,6 @@
+{
+    "#": "../../#_gi0.PINF.it_#.",
+    "this @": "gi0.PINF.it @ wrappers/it.pinf.org.browserify",
+    "this @ wrapper #": "./#_gi0.PINF.it_#.",
+    "gi0.PINF.it @ wrappers # register()": "this @ wrapper # id()"
+}
