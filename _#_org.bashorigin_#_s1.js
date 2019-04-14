@@ -41,62 +41,169 @@ function do_process (options, callback) {
         });
     }
 
-    if (CONFIG.code && !CONFIG.src) {
+    function getCode (callback) {
+        try {
+            var ignorePaths = [];
+            var code = null;
 
-        var code = null;
-        if (typeof CONFIG.code === "function") {
-            code = CONFIG.code.toString().replace(/^function \(\) \{\n([\s\S]+)\n\s*\}$/, "$1");
-        } else
-        if (
-            typeof CONFIG.code === "object" ||
-            (
-                typeof CONFIG.code === "string" &&
-                /^\{/.test(CONFIG.code)
-            )
-        ) {
-            var thawed = CODEBLOCK.thawFromJSON(CONFIG.code);
-            if (typeof thawed.getCode === "function") {
-                code = thawed.getCode();
-            } else {
-                code = ("" + thawed);
+            function finalize (baseDir) {
+/*
+                // TODO: Do this via a browserify plugin
+                var re = /require\.inline\(['"]([^"']+)["']\)/g;
+                var m;
+                while ( (m = re.exec(code)) ) {
+                    var path = null;
+                    if (/^\./.test(m[1])) {
+                        path = PATH.join(baseDir, m[1]);
+                    } else {
+                        path = PATH.join(
+                            LIB.RESOLVE.sync(m[1].split("/")[0] + "/package.json", {
+                                basedir: baseDir
+                            }),
+                            '..',
+                            m[1].replace(/^[^\/]+\//, '')
+                        );
+                    }
+                    ignorePaths.push(path);
+                    code = code.replace(new RegExp(LIB.ESCAPE_REGEXP(m[0]), 'g'), `require("${path}")`);
+                }
+                CONFIG.noParsePaths = CONFIG.noParsePaths || [];
+                CONFIG.noParsePaths = CONFIG.noParsePaths.concat(ignorePaths);
+*/
+                return callback(null, code);
             }
-        } else {
-            code = CONFIG.code;
+
+            if (CONFIG.code && !CONFIG.src) {
+                if (typeof CONFIG.code === "function") {
+                    code = CONFIG.code.toString().replace(/^function[^\()]*\(\) \{\n([\s\S]+)\n\s*\}$/, "$1");
+                } else
+                if (
+                    typeof CONFIG.code === "object" ||
+                    (
+                        typeof CONFIG.code === "string" &&
+                        /^\{/.test(CONFIG.code)
+                    )
+                ) {
+                    var thawed = CODEBLOCK.thawFromJSON(CONFIG.code);
+                    if (typeof thawed.getCode === "function") {
+                        code = thawed.getCode();
+                    } else {
+                        code = ("" + thawed);
+                    }
+                } else {
+                    code = CONFIG.code;
+                }
+                return finalize(process.cwd());
+            } else
+            if (CONFIG.src) {
+
+                if (/^\//.test(CONFIG.src)) {
+
+                    if (FS.statSync(CONFIG.src).isDirectory()) {
+                        try {
+                            CONFIG.src = LIB.RESOLVE.sync(CONFIG.src, {
+                                basedir: CONFIG.src
+                            });
+                        } catch (err) {
+                        }
+                    }
+                } else
+                if (/^\./.test(CONFIG.src)) {
+                    CONFIG.src = PATH.join((CONFIG.basedir) ? CONFIG.basedir : process.cwd(), CONFIG.src);
+                } else {
+
+                    var resolvedPath = null;
+                    var searchPath = CONFIG.src;
+                    if (/\//.test(searchPath)) {
+                        searchPath = CONFIG.src.split("/")[0] + "/package.json";                        
+                    }
+
+                    if (CONFIG.baseDir) {
+                        try {
+                            resolvedPath = LIB.RESOLVE.sync(searchPath, {
+                                basedir: CONFIG.baseDir
+                            });
+                        } catch (err) {
+                        }
+                    }
+                    if (!resolvedPath) {
+                        resolvedPath = LIB.RESOLVE.sync(searchPath, {
+                            basedir: __dirname
+                        });
+                    }
+
+                    if (searchPath !== CONFIG.src) {
+                        CONFIG.src = PATH.join(
+                            resolvedPath,
+                            "..",
+                            CONFIG.src.replace(/^[^\/]+\/?/, '')
+                        );
+                    } else {
+                        CONFIG.src = resolvedPath;
+                    }
+                }
+
+                return FS.exists(CONFIG.src, function (exists) {        
+                    if (!exists) {
+                        return callback(new Error("No source file found at '" + CONFIG.src + "'!"));
+                    }
+                    return FS.readFile(CONFIG.src, 'utf8', function (err, data) {
+                        if (err) {
+                            console.error("CONFIG.src", CONFIG.src);
+                            return callback(err);
+                        }
+
+                        code = data;
+                        return finalize(PATH.dirname(CONFIG.src));
+                    });
+                });
+            }
+            throw new Error("No 'code' nor 'src' found!");
+        } catch (err) {
+            return callback(err);
         }
+    }
+
+    return getCode(function (err, code) {
+        if (err) return callback(err);
+
 
         var tmpPath = null;
+        if (CONFIG.src) {
+            tmpPath = PATH.join(
+                CONFIG.src,
+                "..",
+                // TODO: Derive ID based on some kind of context ID instead of code which changes.
+                ".~rt_it.pinf.org.browserify_src_" + CRYPTO.createHash('sha1').update(code).digest('hex') + ".js"
+            );
+        } else
         if (CONFIG.basedir) {
             tmpPath = PATH.join(
                 CONFIG.basedir,
                 // TODO: Derive ID based on some kind of context ID instead of code which changes.
-                "~.rt_it.pinf.org.browserify_src_" + CRYPTO.createHash('sha1').update(code).digest('hex') + ".js"
+                ".~rt_it.pinf.org.browserify_src_" + CRYPTO.createHash('sha1').update(code).digest('hex') + ".js"
             );
-            FS.readdirSync(PATH.join(tmpPath, "..")).forEach(function (path) {
-                if (!/^~\.rt_/.test(path)) {
-                    return;
-                }
-                var stat = FS.statSync(PATH.join(tmpPath, "..", path));
-                if ((Date.now() - stat.mtime.getTime()) > (60 * 5 * 1000)) {
-                    FS.removeSync(PATH.join(tmpPath, "..", path));
-                }
-            });
         } else {
             tmpPath = PATH.join(
                 process.cwd(),
-                ".rt/it.pinf.org.browserify/src",
                 // TODO: Derive ID based on some kind of context ID instead of code which changes.
-                CRYPTO.createHash('sha1').update(code).digest('hex') + ".js"
+                ".~rt_it.pinf.org.browserify_src_" + CRYPTO.createHash('sha1').update(code).digest('hex') + ".js"
             );
         }
-
         FS.outputFileSync(tmpPath, code, "utf8");
-        CONFIG.src = tmpPath;
-    }    
 
-    return FS.exists(CONFIG.src, function (exists) {        
-        if (!exists) {
-            return callback(new Error("No source file found at '" + CONFIG.src + "'!"));
-        }
+        FS.readdirSync(PATH.join(tmpPath, "..")).forEach(function (path) {
+            if (!/^\.~rt_/.test(path)) {
+                return;
+            }
+            var stat = FS.statSync(PATH.join(tmpPath, "..", path));
+            if ((Date.now() - stat.mtime.getTime()) > (60 * 5 * 1000)) {
+                FS.removeSync(PATH.join(tmpPath, "..", path));
+            }
+        });
+        CONFIG.src = tmpPath;
+
+
         try {
             var opts = {
                 basedir: process.cwd()                
@@ -106,6 +213,8 @@ function do_process (options, callback) {
                 opts.basedir = CONFIG.basedir;
             }
             opts.paths = require("bash.origin.lib").forPackage(opts.basedir).NODE_PATH;
+
+            opts.noParse = CONFIG.noParsePaths;
 
             var remaining = opts.basedir;
             while (true) {
@@ -197,7 +306,7 @@ function do_process (options, callback) {
                     "explicit-unsafe-eval.js"
                 ]
             });
-
+            
             /*
             // NOTE: Do NOT enable this as it breaks various bundles. You need to inject the CSS yourself.
             browserify.require(LIB.resolve('browserify-css/browser'), {
@@ -216,6 +325,10 @@ function do_process (options, callback) {
 
                 if (CONFIG.strictMode === false) {
                     bundle = bundle.replace(/(function\(require,module,exports\)\{)\n"use strict";/g, '$1');
+                }
+                if (CONFIG.renameRequire) {
+                    // TODO: Do this more reliably.
+                    bundle = bundle.replace(/([,;\(:\s])require([\s:\(\);,])/g, '$1_require_$2');
                 }
 
                 var injectionCode = [];

@@ -18,6 +18,7 @@
         "babelify": "^10.0.0",
         "browserify": "^16.2.3",
         "browserify-css": "^0.14.0",
+        "regenerator-runtime": "^0.13.2",
         "through2": "^2.0.3",
         "lib.json": "^0.0.2"
     },
