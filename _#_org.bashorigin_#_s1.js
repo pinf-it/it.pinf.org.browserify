@@ -96,7 +96,7 @@ function do_process (options, callback) {
                 return finalize(process.cwd());
             } else
             if (CONFIG.src) {
-
+                
                 if (/^\//.test(CONFIG.src)) {
 
                     if (FS.statSync(CONFIG.src).isDirectory()) {
@@ -147,6 +147,7 @@ function do_process (options, callback) {
                     if (!exists) {
                         return callback(new Error("No source file found at '" + CONFIG.src + "'!"));
                     }
+
                     return FS.readFile(CONFIG.src, 'utf8', function (err, data) {
                         if (err) {
                             console.error("CONFIG.src", CONFIG.src);
@@ -192,6 +193,7 @@ function do_process (options, callback) {
         }
         FS.outputFileSync(tmpPath, code, "utf8");
 
+
         FS.readdirSync(PATH.join(tmpPath, "..")).forEach(function (path) {
             if (!/^\.~rt_/.test(path)) {
                 return;
@@ -201,7 +203,7 @@ function do_process (options, callback) {
                 FS.removeSync(PATH.join(tmpPath, "..", path));
             }
         });
-        CONFIG.src = tmpPath;
+        var sourcePath = tmpPath;
 
 
         try {
@@ -276,7 +278,7 @@ function do_process (options, callback) {
                 }
             }
 
-            var browserify = BROWSERIFY(CONFIG.src, opts);
+            var browserify = BROWSERIFY(sourcePath, opts);
 
             browserify.transform(LIB.resolve('browserify-css'), {
                 "minify": false,

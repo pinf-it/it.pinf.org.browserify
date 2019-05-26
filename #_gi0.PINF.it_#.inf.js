@@ -18,7 +18,50 @@ exports.inf = async function (INF, NS) {
             return async function (value) {
 
                 const config = INF.LIB.LODASH.clone(value.value);
-                config.src = INF.LIB.PATH.resolve(value.baseDir, config.src);
+
+                if (/^\//.test(config.src)) {
+
+                    if (INF.LIB.FS.statSync(config.src).isDirectory()) {
+                        try {
+                            config.src = INF.LIB.RESOLVE.sync(config.src, {
+                                basedir: CONFIG.src
+                            });
+                        } catch (err) {
+                        }
+                    }
+                } else
+                if (/^\./.test(config.src)) {
+                    config.src = INF.LIB.PATH.join(value.baseDir, config.src);
+                } else {
+
+                    var resolvedPath = null;
+                    var searchPath = config.src;
+                    if (/\//.test(searchPath)) {
+                        searchPath = config.src.split("/")[0] + "/package.json";                        
+                    }
+
+                    try {
+                        resolvedPath = INF.LIB.RESOLVE.sync(searchPath, {
+                            basedir: value.baseDir
+                        });
+                    } catch (err) {
+                        resolvedPath = INF.LIB.RESOLVE.sync(searchPath, {
+                            basedir: __dirname
+                        });
+                    }
+
+                    if (searchPath !== config.src) {
+                        config.src = INF.LIB.PATH.join(
+                            resolvedPath,
+                            "..",
+                            config.src.replace(/^[^\/]+\/?/, '')
+                        );
+                    } else {
+                        config.src = resolvedPath;
+                    }
+                }
+
+//                config.src = INF.LIB.PATH.resolve(value.baseDir, config.src);
 
                 const stream = new INF.LIB.MEMORYSTREAM();
 
