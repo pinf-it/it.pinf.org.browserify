@@ -208,7 +208,8 @@ function do_process (options, callback) {
 
         try {
             var opts = {
-                basedir: process.cwd()                
+                basedir: process.cwd(),
+                fullPaths: false
             };
 
             if (typeof CONFIG.basedir !== "undefined") {
@@ -299,15 +300,43 @@ function do_process (options, callback) {
                 });
             }
 
-            browserify.transform(LIB.resolve("babelify"), {
-                configFile: require.resolve("./babel.config"),
-                sourceMaps: false,
-                compact: false,
-                ignore: [
-                    // TODO: Make this configurable
-                    "explicit-unsafe-eval.js"
-                ]
-            });
+
+
+            function makeBabelConfig () {
+
+                const presets = [
+                    [
+                        require("@babel/preset-env"),
+                        LIB.LODASH.merge(
+                            {
+                                ignoreBrowserslistConfig: true
+                            },
+                            LIB.LODASH.get(CONFIG, ['babel', 'presets', '@babel/preset-env'], {})
+                        )
+                    ]
+                ];
+
+                const plugins = [
+                    require("@babel/plugin-transform-arrow-functions"),
+                    require("@babel/plugin-transform-block-scoping"),
+                    require("@babel/plugin-transform-template-literals")
+                ];
+            
+                return {
+                    presets,
+                    plugins,
+                    comments: false,
+                    minified: false,
+                    sourceMaps: false,
+                    compact: false,
+                    ignore: [
+                        // TODO: Make this configurable
+                        "explicit-unsafe-eval.js"
+                    ]
+                };                
+            }
+
+            browserify.transform(LIB.resolve("babelify"), makeBabelConfig());
             
             /*
             // NOTE: Do NOT enable this as it breaks various bundles. You need to inject the CSS yourself.
