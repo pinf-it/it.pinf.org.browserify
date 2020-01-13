@@ -5,6 +5,9 @@ environments: default
 >>>TEST_IGNORE_LINE:^[\d\.]+\s<<<
 
 
+- [0;36mConnecting to localhost on port 4444...
+[0m
+
   Suite
 [bash.origin.express] Adding route: /dist/script.browser.js
 [bash.origin.express] Adding route: /^\/resources\//

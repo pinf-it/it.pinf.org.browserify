@@ -1,5 +1,7 @@
 #!/usr/bin/env bash.origin.script
 
+echo ">>>TEST_IGNORE_LINE:Browserslist: caniuse-lite is outdated.<<<"
+
 depend {
     "bundler": "@com.github/pinf-it/it.pinf.org.browserify#s1"
 }

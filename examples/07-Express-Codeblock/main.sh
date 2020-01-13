@@ -1,5 +1,7 @@
 #!/usr/bin/env bash.origin.script
 
+echo ">>>TEST_IGNORE_LINE:Waiting until program 'server' is alive<<<"
+
 depend {
     "process": "@com.github/bash-origin/bash.origin.process#s1"
 }

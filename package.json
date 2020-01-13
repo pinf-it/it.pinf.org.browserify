@@ -1,6 +1,6 @@
 {
   "name": "it.pinf.org.browserify",
-  "version": "0.1.0-pre.0",
+  "version": "0.1.0-pre.1",
   "pm": {
     "publish": "npm"
   },
@@ -17,13 +17,12 @@
     "browserify-css": "^0.14.0",
     "browserslist": "^4.6.6",
     "caniuse-lite": "^1.0.30000986",
-    "lib.json": "^0.0.3",
+    "lib.json": "^0.0.6-pre.0",
     "regenerator-runtime": "^0.13.2",
     "through2": "^2.0.3",
-    "bash.origin.lib": "^0.4.0-pre.0"
+    "bash.origin.lib": "^0.4.0-pre.9"
   },
   "scripts": {
-    "install": "lib.json from node_modules > .~lib.json",
     "test": "bash.origin.test examples"
   },
   "devDependencies": {
