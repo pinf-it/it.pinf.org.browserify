@@ -1,0 +1,8 @@
+{
+    "build/v0 #": "${__DIRNAME__}/tool.",
+    "copy/v0 #": "${__DIRNAME__}/tool.",
+    "strip-debug/v0 #": "${__DIRNAME__}/tool.",
+    "closure-compiler/v0 #": "${__DIRNAME__}/tool.",
+    "gzip/v0 #": "${__DIRNAME__}/tool.",
+    "brotli/v0 #": "${__DIRNAME__}/tool."
+}
