@@ -20,7 +20,7 @@
     "lib.json": "^0.0.6-pre.0",
     "regenerator-runtime": "^0.13.2",
     "through2": "^2.0.3",
-    "bash.origin.lib": "^0.4.0-pre.9"
+    "bash.origin.lib": "^0.4.0-pre.10"
   },
   "scripts": {
     "test": "bash.origin.test examples"
