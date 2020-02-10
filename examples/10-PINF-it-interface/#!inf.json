@@ -1,0 +1,28 @@
+#!/usr/bin/env inf
+{
+    "#": "gi0.PINF.it/core/v0",
+
+    "#": {
+        "browserify": "it.pinf.org.browserify"
+    },
+
+    ":build:": "browserify @ build/v0",
+
+
+    "gi0.PINF.it/core/v0 @ # :build: write() /dist/script.cjs.js": {
+        "src": "../01-Format-Browser/script.js",
+        "expose": {
+            "exports": "script_global"
+        },
+        "files": {
+            "resources": "../01-Format-Browser/resources"
+        },
+        "inject": {
+            "dataLoader": (javascript () >>>
+                function (url, done) {
+                    done(JSON.parse(require("fs").readFileSync(require("path").join(__dirname, url), "utf8")));
+                }
+            <<<)
+        }
+    }
+}

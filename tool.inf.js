@@ -7,7 +7,13 @@ exports['gi0.pinf.it/core/v0/tool'] = async function (workspace, LIB) {
             return async function (invocation) {
                 const stream = new LIB.MEMORYSTREAM();
                 setImmediate(function () {
+                    if (invocation.value.dist) {
+                        LIB.console.error(`'dist' config property may not be set!`);
+                        process.exit(1);
+                    }
                     invocation.value.basedir = invocation.value.basedir || invocation.cwd;
+                    invocation.value.skipWriteDistScript = true;
+                    invocation.value.dist = '.' + LIB.PATH.resolve('/', invocation.mount.path);
                     const api = require('./_#_org.bashorigin_#_s1').forConfig(invocation.value);
                     api['#io.pinf/process~s1']({}, function (err, bundle) {
                         if (err) {

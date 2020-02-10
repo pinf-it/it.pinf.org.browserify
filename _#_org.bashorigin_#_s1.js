@@ -36,25 +36,43 @@ function do_process (options, callback) {
 
     options.variables = options.variables || {};
 
-    function writeDist (code, callback) {
-        if (!CONFIG.dist) {
-            return callback(null);
-        }
-        return FS.outputFile(PATH.resolve(CONFIG.basedir, CONFIG.dist), code, "utf8", function (err) {
-            if (err) return callback(err);
+    function writeDist (code, _callback) {
+
+        function callback (err) {
+            if (err) return _callback(err);
 
             if (!CONFIG.files) {
-                return callback(null);
+                return _callback(null);
+            }
+
+            const targetBaseDir = PATH.dirname(PATH.resolve(CONFIG.basedir, CONFIG.dist));
+
+            if (!FS.existsSync(targetBaseDir)) {
+                FS.mkdirsSync(targetBaseDir);
             }
 
             // Copy files
             Object.keys(CONFIG.files).forEach(function (filepath) {
 
-                var sourceBasePath = CONFIG.files[filepath];
-                var targetBasePath = PATH.join(PATH.resolve(CONFIG.basedir, CONFIG.dist), "..", filepath);
+                var sourcePath = CONFIG.files[filepath];
+                var targetPath = PATH.join(targetBaseDir, filepath);
 
-                FS.copySync(sourceBasePath, targetBasePath);
+                FS.copySync(sourcePath, targetPath);
             });
+
+            return _callback(null);
+        }
+
+        if (!CONFIG.dist) {
+            return callback(null);
+        }
+
+        if (CONFIG.skipWriteDistScript) {
+            return callback(null);
+        }
+
+        return FS.outputFile(PATH.resolve(CONFIG.basedir, CONFIG.dist), code, "utf8", function (err) {
+            if (err) return callback(err);
 
             return callback(null);
         });
