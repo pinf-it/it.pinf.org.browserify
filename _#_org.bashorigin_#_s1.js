@@ -28,16 +28,19 @@ const CODEBLOCK = LIB.CODEBLOCK;
 
 
 function do_process (options, callback) {
+    options = options || {};
+
     var CONFIG = options.CONFIG;
 
-    options = options || {};
+    CONFIG.basedir = (CONFIG.basedir && LIB.PATH.resolve(process.cwd(), CONFIG.basedir)) || process.cwd();
+
     options.variables = options.variables || {};
 
     function writeDist (code, callback) {
         if (!CONFIG.dist) {
             return callback(null);
         }
-        return FS.outputFile(CONFIG.dist, code, "utf8", function (err) {
+        return FS.outputFile(PATH.resolve(CONFIG.basedir, CONFIG.dist), code, "utf8", function (err) {
             if (err) return callback(err);
 
             if (!CONFIG.files) {
@@ -48,7 +51,7 @@ function do_process (options, callback) {
             Object.keys(CONFIG.files).forEach(function (filepath) {
 
                 var sourceBasePath = CONFIG.files[filepath];
-                var targetBasePath = PATH.join(CONFIG.dist, "..", filepath);
+                var targetBasePath = PATH.join(PATH.resolve(CONFIG.basedir, CONFIG.dist), "..", filepath);
 
                 FS.copySync(sourceBasePath, targetBasePath);
             });
@@ -125,7 +128,7 @@ function do_process (options, callback) {
                     }
                 } else
                 if (/^\./.test(CONFIG.src)) {
-                    CONFIG.src = PATH.join((CONFIG.basedir) ? CONFIG.basedir : process.cwd(), CONFIG.src);
+                    CONFIG.src = PATH.join(CONFIG.basedir, CONFIG.src);
                 } else {
 
                     var resolvedPath = null;
