@@ -1,4 +1,6 @@
-#!/usr/bin/env bash.origin.script
+#!/usr/bin/env bash
+
+[ ! -e "dist" ] || rm -Rf dist
 
 pinf.it .
 

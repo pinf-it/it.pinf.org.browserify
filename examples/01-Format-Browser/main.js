@@ -1,25 +1,17 @@
 #!/usr/bin/env bash.origin.test via github.com/nightwatchjs/nightwatch
-/*
-module.config = {
-    "browsers": [
-        "chrome"
-    ],
-    "test_runner": "mocha"
-}
-*/
 
-//console.log(">>>TEST_IGNORE_LINE:GET /dist/resources/insight.renderers.default/images/<<<");
+const LIB = require('bash.origin.lib').js;
 
-const ASSERT = require("assert");
+describe("Suite", function () {
 
-console.log(">>>TEST_IGNORE_LINE:^[\\d\\.]+\\s<<<");
+    if (LIB.FS_EXTRA.existsSync('dist')) {
+        LIB.FS_EXTRA.removeSync('dist');
+    }
 
-describe("Suite", function() {
-
-    require('bash.origin.lib').js.BASH_ORIGIN_EXPRESS.runForTestHooks(before, after, {
+    const server = LIB.BASH_ORIGIN_EXPRESS.runForTestHooks(before, after, {
         "routes": {
             "/dist/script.browser.js": {
-                "@it.pinf.org.browserify#s1": {
+                "@it.pinf.org.browserify # router/v0": {
                     "src": __dirname + "/script.js",
                     "dist": __dirname + "/dist/script.browser.js",
                     "expose": {
@@ -45,10 +37,14 @@ describe("Suite", function() {
         }
     });
 
-    it('Test', function (client) {
+    it('Test', async function (client) {
 
-        client.url('http://localhost:' + process.env.PORT + '/').pause(500);
+        const PORT = (await server).config.port;
+
+        client.url('http://localhost:' + PORT + '/');
         
+if (process.env.BO_TEST_FLAG_DEV) client.pause(60 * 60 * 24 * 1000);
+
         client.waitForElementPresent('BODY', 3000);
 
         client.executeAsync(function (done) {
@@ -62,10 +58,7 @@ describe("Suite", function() {
             ]);
         }, [], function (result) {
 
-            ASSERT.deepEqual(result.value, [ { data: { bar: 'baz' }, foo: 'bar' }, null ]);
+            LIB.ASSERT.deepEqual(result.value, [ { data: { bar: 'baz' }, foo: 'bar' }, null ]);
         });
-
-        if (process.env.BO_TEST_FLAG_DEV) client.pause(60 * 60 * 24 * 1000);
-
     });
 });

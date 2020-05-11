@@ -1,22 +1,36 @@
 >>>TEST_IGNORE_LINE:assertions passed\.<<<
 >>>TEST_IGNORE_LINE:\d milliseconds.$<<<
 >>>TEST_IGNORE_LINE:\d+\spassing\s\([^\)]+\)<<<
-environments: default
->>>TEST_IGNORE_LINE:^[\d\.]+\s<<<
+environments: default,chrome
 
-
+[0;35m==================[0m
 - [0;36mConnecting to localhost on port 4444...
 [0m
 
-  Suite
+[34m[1m[pinf.it][22m[39m [34m[1mMounting route app to: TeStLoCaLiZeDTeStLoCaLiZeD/dist/script.browser.js[22m[39m
 [bash.origin.express] Adding route: /dist/script.browser.js
 [bash.origin.express] Adding route: /^\/resources\//
 [bash.origin.express] Adding route: /
 Server: http://localhost:8080/
-[READY]
-[bash.origin.express] Routing request / with method GET due to route /
-[bash.origin.express] Routing request / with method GET due to route /dist/script.browser.js
-[bash.origin.express] Routing request /data.json with method GET due to route { /^\/resources\// fast_star: false, fast_slash: false }
+Running:  [0;32mTest[0m
+
+127.0.0.1 - "GET / HTTP/1.1" 200 - "-"
+127.0.0.1 - "GET /dist/script.browser.js HTTP/1.1" 200 - "http://localhost:8080/"
+127.0.0.1 - "GET /resources/data.json HTTP/1.1" 200 - "http://localhost:8080/"
 
 
+[0;35m==================[0m
+- [0;36mConnecting to localhost on port 4444...
+[0m
+
+[34m[1m[pinf.it][22m[39m [34m[1mMounting route app to: TeStLoCaLiZeDTeStLoCaLiZeD/dist/script.browser.js[22m[39m
+[bash.origin.express] Adding route: /dist/script.browser.js
+[bash.origin.express] Adding route: /^\/resources\//
+[bash.origin.express] Adding route: /
+Server: http://localhost:8080/
+Running:  [0;32mTest[0m
+
+127.0.0.1 - "GET / HTTP/1.1" 200 - "-"
+127.0.0.1 - "GET /dist/script.browser.js HTTP/1.1" 200 - "http://localhost:8080/"
+127.0.0.1 - "GET /resources/data.json HTTP/1.1" 200 - "http://localhost:8080/"
 

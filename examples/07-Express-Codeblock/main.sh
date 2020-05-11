@@ -3,10 +3,10 @@
 echo ">>>TEST_IGNORE_LINE:Waiting until program 'server' is alive<<<"
 
 depend {
-    "process": "@com.github/bash-origin/bash.origin.process#s1"
+    "process": "bash.origin.process # runner/v0"
 }
 
-CALL_process run "bash.origin.express~07-Express-Codeblock" {
+CALL_process run {
     "server": {
         "env": {
             # TODO: Use dynamic port
@@ -16,17 +16,19 @@ CALL_process run "bash.origin.express~07-Express-Codeblock" {
             #!/usr/bin/env bash.origin.script
 
             depend {
-                "server": "@com.github/bash-origin/bash.origin.express#s1"
+                "server": "bash.origin.express # server/v0"
             }
 
             CALL_server run {
                 "routes": {
                     "/code.js": {
-                        "@it.pinf.org.browserify#s1": {
-                            "code": function /* CodeBlock */ (options) {
+                        "gi0.PINF.it/build/v0 # /.dist # /code.js": {
+                            "@it.pinf.org.browserify # router/v1": {
+                                "code": function /* CodeBlock */ (options) {
 
-                                window.hello = "world";
+                                    window.hello = "world";
 
+                                }
                             }
                         }
                     }

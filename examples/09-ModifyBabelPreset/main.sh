@@ -3,12 +3,13 @@
 echo ">>>TEST_IGNORE_LINE:Browserslist: caniuse-lite is outdated.<<<"
 
 depend {
-    "bundler": "@com.github/pinf-it/it.pinf.org.browserify#s1"
+    "bundler": "it.pinf.org.browserify # bundler/v0"
 }
 
-CALL_bundler run {
+[ ! -e "dist" ] || rm -Rf dist
+
+CALL_bundler run "dist/script.cjs.js" {
     "src": "$__DIRNAME__/script.js",
-    "dist": "$__DIRNAME__/dist/script.cjs.js",
     "expose": {
         "exports": "foo"
     },

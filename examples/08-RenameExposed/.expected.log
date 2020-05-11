@@ -13,10 +13,6 @@ environments: default
 [bash.origin.express] Adding route: /^\/resources\//
 [bash.origin.express] Adding route: /
 Server: http://localhost:8080/
-[READY]
-[bash.origin.express] Routing request / with method GET due to route /
-[bash.origin.express] Routing request / with method GET due to route /dist/script.browser.js
-[bash.origin.express] Routing request /data.json with method GET due to route { /^\/resources\// fast_star: false, fast_slash: false }
 
 
 

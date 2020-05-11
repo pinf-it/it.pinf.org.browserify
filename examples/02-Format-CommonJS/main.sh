@@ -1,12 +1,15 @@
 #!/usr/bin/env bash.origin.script
 
+set -e
+
 depend {
-    "bundler": "@com.github/pinf-it/it.pinf.org.browserify#s1"
+    "bundler": "it.pinf.org.browserify # bundler/v0"
 }
 
-CALL_bundler run {
+[ ! -e "dist" ] || rm -Rf dist
+
+CALL_bundler run "/dist/script.cjs.js" {
     "src": "$__DIRNAME__/../01-Format-Browser/script.js",
-    "dist": "$__DIRNAME__/dist/script.cjs.js",
     "expose": {
         "exports": "script_global"
     },
@@ -21,6 +24,8 @@ CALL_bundler run {
         <<<)
     }
 }
+
+echo "---"
 
 node --eval '
     const ASSERT = require("assert");

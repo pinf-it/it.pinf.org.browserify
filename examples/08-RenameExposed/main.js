@@ -8,34 +8,34 @@ module.config = {
 }
 */
 
-//console.log(">>>TEST_IGNORE_LINE:GET /dist/resources/insight.renderers.default/images/<<<");
-
-const ASSERT = require("assert");
-
 console.log(">>>TEST_IGNORE_LINE:^[\\d\\.]+\\s<<<");
+
+const LIB = require('bash.origin.lib').js;
 
 describe("Suite", function() {
 
-    require('bash.origin.lib').js.BASH_ORIGIN_EXPRESS.runForTestHooks(before, after, {
+    const server = LIB.BASH_ORIGIN_EXPRESS.runForTestHooks(before, after, {
         "routes": {
             "/dist/script.browser.js": {
-                "@it.pinf.org.browserify#s1": {
-                    "src": __dirname + "/../01-Format-Browser/script.js",
-                    "dist": __dirname + "/dist/script.browser.js",
-                    "expose": {
-                        "window": {
-                            "script_global_renamed": "script_global"
-                        }
-                    },
-                    "prime": true,
-                    "files": {
-                        "resources": __dirname + "/../01-Format-Browser/resources"
-                    },
-                    "inject": {
-                        "dataLoader": function (url, done) {                            
-                            fetch(url).then(function(response) {
-                                return response.json();
-                            }).then(done);
+                "gi0.PINF.it/build/v0 # /dist # /script.browser.js": {
+                    "@it.pinf.org.browserify # router/v1": {
+                        "src": __dirname + "/../01-Format-Browser/script.js",
+                        "expose": {
+                            "window": {
+                                "script_global_renamed": "script_global"
+                            }
+                        },
+                        "files": {
+                            "resources": __dirname + "/../01-Format-Browser/resources"
+                        },
+                        "inject": {
+                            "dataLoader": function /* CodeBlock */ () {
+                                function dataLoader (url, done) {
+                                    fetch(url).then(function(response) {
+                                        return response.json();
+                                    }).then(done);
+                                }
+                            }
                         }
                     }
                 }
@@ -47,10 +47,14 @@ describe("Suite", function() {
         }
     });
 
-    it('Test', function (client) {
+    it('Test', async function (client) {
 
-        client.url('http://localhost:' + process.env.PORT + '/').pause(500);
-        
+        const PORT = (await server).config.port;
+
+        client.url('http://localhost:' + PORT + '/').pause(500);
+
+if (process.env.BO_TEST_FLAG_DEV) client.pause(60 * 60 * 24 * 1000);
+
         client.waitForElementPresent('BODY', 3000);
 
         client.executeAsync(function (done) {
@@ -64,7 +68,7 @@ describe("Suite", function() {
             ]);
         }, [], function (result) {
 
-            ASSERT.deepEqual(result.value, [ { data: { bar: 'baz' }, foo: 'bar' }, null ]);
+            LIB.ASSERT.deepEqual(result.value, [ { data: { bar: 'baz' }, foo: 'bar' }, null ]);
         });
 
         if (process.env.BO_TEST_FLAG_DEV) client.pause(60 * 60 * 24 * 1000);
