@@ -11,5 +11,7 @@
 
     "router/v1 #": "${__DIRNAME__}/tool1.",
     "build/v1 #": "${__DIRNAME__}/tool1.",
-    "run/v1 #": "${__DIRNAME__}/tool1."
+    "run/v1 #": "${__DIRNAME__}/tool1.",
+    "copy/v1 #": "${__DIRNAME__}/tool1.",
+    "download/v1 #": "${__DIRNAME__}/tool1."
 }
